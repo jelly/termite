@@ -1404,16 +1404,17 @@ static void parse_config_keybinding ( keybinding_key *bind, const char *value, g
     guint kmod, kkey;
     // Clear existing.
     bind->keys.clear();
+
     if (value) {
         gchar **str_bindings = g_strsplit(value, ",", -1);
         for (guint i =0; str_bindings != nullptr &&  str_bindings[i] != nullptr; i++)
         {
-            gtk_accelerator_parse(str_bindings[i], &kkey,  (GdkModifierType *)&kmod);
-            if ((kmod&GDK_SHIFT_MASK) == GDK_SHIFT_MASK) {
+            gtk_accelerator_parse(str_bindings[i], &kkey, (GdkModifierType *) & kmod);
+            if ((kmod & GDK_SHIFT_MASK) == GDK_SHIFT_MASK) {
                 kkey = gdk_keyval_to_upper(kkey);
             }
             if (!(kmod == 0 && kkey == 0)) {
-                bind->keys.push_back(std::make_tuple(kmod&modifiers, kkey));
+                bind->keys.push_back(std::make_tuple(kmod & modifiers, kkey));
             } else {
                 fprintf(stderr, "Failed to understand: %s\n", str_bindings[i]);
             }
@@ -1421,17 +1422,17 @@ static void parse_config_keybinding ( keybinding_key *bind, const char *value, g
         g_strfreev(str_bindings);
     }
 }
+
 static void load_keybindings ( GKeyFile *config )
 {
     const guint modifiers = gtk_accelerator_get_default_mod_mask();
     // TODO: Can we not loop over all entries. It's a hash map loop over config..
     for ( auto it = bindings.begin(); it != bindings.end(); ++it ) {
-        char *val = config ? g_key_file_get_string ( config, "keybindings", it->second.str, NULL):NULL;
+        char *val = config ? g_key_file_get_string(config, "keybindings", it->second.str, NULL) : NULL;
         if (val) {
             parse_config_keybinding(&it->second, val, modifiers);
             g_free(val);
-        }
-        else {
+        } else {
             parse_config_keybinding(&(it->second), it->second.str_key, modifiers);
         }
     }
