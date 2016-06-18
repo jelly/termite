@@ -29,6 +29,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <unordered_map>
 
 #include <gtk/gtk.h>
 #include <vte/vte.h>
@@ -190,59 +191,58 @@ enum class keybinding_cmd {
 };
 
 typedef struct _keybinding_key {
-    keybinding_cmd  cmd;
     guint            mode;
     const char      *str;
     const char      *str_key;
-    std::list<std::tuple<guint, guint>> keys; // convert to hashmap
-}keybinding_key;
+    std::list<std::tuple<guint, guint>> keys;
+} keybinding_key;
 
 // FIXME: hashmap 
-keybinding_key bindings[] = {
-    { keybinding_cmd::FIND_NEXT,                   ~vi_mode::insert, "find-next",                 "n",                           },
-    { keybinding_cmd::FIND_PREVIOUS,               ~vi_mode::insert, "find-previous",             "<Shift>N",                    },
-    { keybinding_cmd::SEARCH_FORWARD,              ~vi_mode::insert, "search-forward",            "u",                           },
-    { keybinding_cmd::SEARCH_REVERSE,              ~vi_mode::insert, "search-reverse",            "<Shift>U",                    },
-    { keybinding_cmd::EXIT_COMMAND_MODE,           ~vi_mode::insert, "exit-mode",                 "<Control>bracketleft,Escape,q",        },
-    { keybinding_cmd::TOGGLE_VISUAL_BLOCK,         ~vi_mode::insert, "toggle-visual-block",       "<Control>v",                  },
-    { keybinding_cmd::MOVE_BACKWARD_BLANK_WORD,    ~vi_mode::insert, "move-backword-black-word",  "<Control>Left,<Shift>W",      },
-    { keybinding_cmd::MOVE_FORWARD_BLANK_WORD,     ~vi_mode::insert, "move-forward-black-word",   "<Control>Right,<Shift>B",     },
-    { keybinding_cmd::MOVE_HALF_UP,                ~vi_mode::insert, "move-half-up",              "<Control>u",                  },
-    { keybinding_cmd::MOVE_HALF_DOWN,              ~vi_mode::insert, "move-half-down",            "<Control>d",                  },
-    { keybinding_cmd::MOVE_FULL_UP,                ~vi_mode::insert, "move-full-up",              "<Control>b",                  },
-    { keybinding_cmd::MOVE_FULL_DOWN,              ~vi_mode::insert, "move-full-up",              "<Control>f",                  },
-    { keybinding_cmd::MOVE_WORD_BACK,              ~vi_mode::insert, "move-word-back",            "<Shift>Left,b",               },
-    { keybinding_cmd::MOVE_WORD_FORWARD,           ~vi_mode::insert, "move-word-forward",         "<Shift>Right,w",              },
-    { keybinding_cmd::MOVE_LEFT,                   ~vi_mode::insert, "move-left",                 "Left,h",                      },
-    { keybinding_cmd::MOVE_DOWN,                   ~vi_mode::insert, "move-down",                 "Down,j",                      },
-    { keybinding_cmd::MOVE_UP,                     ~vi_mode::insert, "move-up",                   "Up,k",                        },
-    { keybinding_cmd::MOVE_RIGHT,                  ~vi_mode::insert, "move-right",                "Right,l",                     },
-    { keybinding_cmd::CURSOR_COLUMN0,              ~vi_mode::insert, "cursor-column0",            "0",                           },
-    { keybinding_cmd::CURSOR_COLUMN_MOVE_FIRST,    ~vi_mode::insert, "cursor-column-move-first",  "asciicircum",                 },
-    { keybinding_cmd::MOVE_EOL,                    ~vi_mode::insert, "move-eol",                  "dollar",                      },
-    { keybinding_cmd::MOVE_FIRST_ROW,              ~vi_mode::insert, "move-first-row",            "g",                           },
-    { keybinding_cmd::MOVE_LAST_ROW,               ~vi_mode::insert, "move-last-row",             "G",                           },
-    { keybinding_cmd::TOGGLE_VISUAL,               ~vi_mode::insert, "toggle-visual",             "v",                           },
-    { keybinding_cmd::TOGGLE_VISUAL_LINE,          ~vi_mode::insert, "toggle-visual-line",        "<Shift>V",                    },
-    { keybinding_cmd::COPY_CLIPBOARD,              ~vi_mode::insert, "copy-clipboard",            "y,<Control><Shift>c",         },
-    { keybinding_cmd::COPY_CLIPBOARD,               vi_mode::insert, "copy-clipboard-insert",     "<Control><Shift>c",           },
-    { keybinding_cmd::FULLSCREEN,                   vi_mode::all ,   "fullscreen",                "F11",                         },
-    { keybinding_cmd::SEARCH,                      ~vi_mode::insert, "search",                    "slash",                       },
-    { keybinding_cmd::RSEARCH,                     ~vi_mode::insert, "rsearch",                   "question",                    },
-    { keybinding_cmd::OPEN_SELECTION,              ~vi_mode::insert, "open-selection",            "o",                           },
-    { keybinding_cmd::OPEN_SELECTION_EXIT_COMMAND, ~vi_mode::insert, "open-selection-exit-command","Return",                     },
-    { keybinding_cmd::FIND_URL,                    ~vi_mode::insert, "find-url",                  "x",                           },
-    { keybinding_cmd::ZOOM_IN,                     ~vi_mode::insert, "zoom-in",                   "<Shift>plus,plus",            },
-    { keybinding_cmd::ZOOM_RESET,                  ~vi_mode::insert, "zoom-reset",                "equal",                           },
-    { keybinding_cmd::ZOOM_OUT,                    ~vi_mode::insert, "zoom-out",                  "minus",                       },
-    { keybinding_cmd::COMPLETE,                     vi_mode::all,    "complete",                  "<Control>Tab",                },
-    { keybinding_cmd::LAUNCH_IN_DIRECTORY,          vi_mode::all,    "launch-in-directory",       "<Control><Shift>t",           },
-    { keybinding_cmd::COMMAND_MODE,                 vi_mode::all,    "command-mode",              "<Control><Shift>space,<Control><Shift>nobreakspace",},
-    { keybinding_cmd::URL_HINT,                     vi_mode::all,    "url-hint",                  "<Control><Shift>x",           },
-    { keybinding_cmd::PASTE_CLIPBOARD,              vi_mode::all,    "paste-clipboard",           "<Control><Shift>v",           },
-    { keybinding_cmd::RELOAD_CONFIG,                vi_mode::all,    "reload-config",             "<Control><Shift>R"},
+
+std::unordered_map<keybinding_cmd, keybinding_key> bindings = {
+    { keybinding_cmd::FIND_NEXT, {                   ~vi_mode::insert, "find-next",                 "n",                           }},
+    { keybinding_cmd::FIND_PREVIOUS, {               ~vi_mode::insert, "find-previous",             "<Shift>N",                    }},
+    { keybinding_cmd::SEARCH_FORWARD,  {             ~vi_mode::insert, "search-forward",            "u",                           }},
+    { keybinding_cmd::SEARCH_REVERSE,   {           ~vi_mode::insert, "search-reverse",            "<Shift>U",                    }},
+    { keybinding_cmd::EXIT_COMMAND_MODE, {           ~vi_mode::insert, "exit-mode",                 "<Control>bracketleft,Escape,q",        }},
+    { keybinding_cmd::TOGGLE_VISUAL_BLOCK,  {        ~vi_mode::insert, "toggle-visual-block",       "<Control>v",                  }},
+    { keybinding_cmd::MOVE_BACKWARD_BLANK_WORD, {    ~vi_mode::insert, "move-backword-black-word",  "<Control>Left,<Shift>W",      }},
+    { keybinding_cmd::MOVE_FORWARD_BLANK_WORD, {   ~vi_mode::insert, "move-forward-black-word",   "<Control>Right,<Shift>B",     }},
+    { keybinding_cmd::MOVE_HALF_UP,    {            ~vi_mode::insert, "move-half-up",              "<Control>u",                  }},
+    { keybinding_cmd::MOVE_HALF_DOWN,    {           ~vi_mode::insert, "move-half-down",            "<Control>d",                  }},
+    { keybinding_cmd::MOVE_FULL_UP,      {          ~vi_mode::insert, "move-full-up",              "<Control>b",                  }},
+    { keybinding_cmd::MOVE_FULL_DOWN,    {          ~vi_mode::insert, "move-full-up",              "<Control>f",                  }},
+    { keybinding_cmd::MOVE_WORD_BACK,    {          ~vi_mode::insert, "move-word-back",            "<Shift>Left,b",               }},
+    { keybinding_cmd::MOVE_WORD_FORWARD, {          ~vi_mode::insert, "move-word-forward",         "<Shift>Right,w",              }},
+    { keybinding_cmd::MOVE_LEFT,         {          ~vi_mode::insert, "move-left",                 "Left,h",                      }},
+    { keybinding_cmd::MOVE_DOWN,         {          ~vi_mode::insert, "move-down",                 "Down,j",                      }},
+    { keybinding_cmd::MOVE_UP,           {          ~vi_mode::insert, "move-up",                   "Up,k",                        }},
+    { keybinding_cmd::MOVE_RIGHT,        {          ~vi_mode::insert, "move-right",                "Right,l",                     }},
+    { keybinding_cmd::CURSOR_COLUMN0,    {          ~vi_mode::insert, "cursor-column0",            "0",                           }},
+    { keybinding_cmd::CURSOR_COLUMN_MOVE_FIRST, {    ~vi_mode::insert, "cursor-column-move-first",  "asciicircum",                 }},
+    { keybinding_cmd::MOVE_EOL, {                    ~vi_mode::insert, "move-eol",                  "dollar",                      }},
+    { keybinding_cmd::MOVE_FIRST_ROW, {              ~vi_mode::insert, "move-first-row",            "g",                           }}, 
+    { keybinding_cmd::MOVE_LAST_ROW,   {            ~vi_mode::insert, "move-last-row",             "G",                           }},
+    { keybinding_cmd::TOGGLE_VISUAL,   {            ~vi_mode::insert, "toggle-visual",             "v",                           }},
+    { keybinding_cmd::TOGGLE_VISUAL_LINE, {          ~vi_mode::insert, "toggle-visual-line",        "<Shift>V",                    }},
+    { keybinding_cmd::COPY_CLIPBOARD,      {        ~vi_mode::insert, "copy-clipboard",            "y,<Control><Shift>c",         }},
+    { keybinding_cmd::COPY_CLIPBOARD,    {           vi_mode::insert, "copy-clipboard-insert",     "<Control><Shift>c",           }},
+    { keybinding_cmd::FULLSCREEN,        {           vi_mode::all ,   "fullscreen",                "F11",                         }},
+    { keybinding_cmd::SEARCH,    {                  ~vi_mode::insert, "search",                    "slash",                       }},
+    { keybinding_cmd::RSEARCH,   {                 ~vi_mode::insert, "rsearch",                   "question",                     }},
+    { keybinding_cmd::OPEN_SELECTION, {              ~vi_mode::insert, "open-selection",            "o",                          }},
+    { keybinding_cmd::OPEN_SELECTION_EXIT_COMMAND, { ~vi_mode::insert, "open-selection-exit-command","Return",                    }},
+    { keybinding_cmd::FIND_URL, {                    ~vi_mode::insert, "find-url",                  "x",                          }},
+    { keybinding_cmd::ZOOM_IN,  {                    vi_mode::all,    "zoom-in",                   "<control><Shift>plus",        }},
+    { keybinding_cmd::ZOOM_RESET, {                  vi_mode::all,    "zoom-reset",                "<Control>equal",              }},
+    { keybinding_cmd::ZOOM_OUT, {                    vi_mode::all,    "zoom-out",                  "<Control>minus",              }},
+    { keybinding_cmd::COMPLETE,  {                   vi_mode::all,    "complete",                  "<Control>Tab",                }},
+    { keybinding_cmd::LAUNCH_IN_DIRECTORY, {         vi_mode::all,    "launch-in-directory",       "<Control><Shift>t",           }},
+    { keybinding_cmd::COMMAND_MODE, {                vi_mode::all,    "command-mode",              "<Control><Shift>space,<Control><Shift>nobreakspace",}},
+    { keybinding_cmd::URL_HINT, {                    vi_mode::all,    "url-hint",                  "<Control><Shift>x",           }},
+    { keybinding_cmd::PASTE_CLIPBOARD, {             vi_mode::all,    "paste-clipboard",           "<Control><Shift>v",           }},
+    { keybinding_cmd::RELOAD_CONFIG,  {              vi_mode::all,    "reload-config",             "<Control><Shift>R"}},
 };
-size_t num_bindings = sizeof(bindings)/sizeof(keybinding_key);
 
 static void launch_browser(char *browser, char *url);
 static void window_title_cb(VteTerminal *vte, gboolean *dynamic_title);
@@ -868,13 +868,14 @@ gboolean window_state_cb(GtkWindow *, GdkEventWindowState *event, keybind_info *
 gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, keybind_info *info) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
 
-    for ( guint i = 0; i < num_bindings; i++) {
-        if( (bindings[i].mode&info->select.mode) != 0 ){
-            for ( auto &binding : bindings[i].keys ) {
+    //for ( guint i = 0; i < num_bindings; i++) {
+    for ( auto it = bindings.begin(); it != bindings.end(); ++it ) {
+        if( (it->second.mode&info->select.mode) != 0 ){
+            for ( auto &binding : it->second.keys ) {
                 guint mod = std::get<0>(binding);
                 guint key = std::get<1>(binding);
                 if ( (mod) == (modifiers) && (key) == (event->keyval) ){
-                    switch( bindings[i].cmd ) {
+                    switch( it->first ) {
                         case keybinding_cmd::FULLSCREEN:
                             info->fullscreen_toggle(info->window);
                             return TRUE;
@@ -1424,14 +1425,15 @@ static void parse_config_keybinding ( keybinding_key *bind, const char *value, g
 static void load_keybindings ( GKeyFile *config )
 {
     const guint modifiers = gtk_accelerator_get_default_mod_mask();
-    for(gsize k=0; k <  num_bindings; k++){
-        char *val = config?g_key_file_get_string ( config, "keybindings", bindings[k].str, NULL):NULL;
+    // TODO: Can we not loop over all entries. It's a hash map loop over config..
+    for ( auto it = bindings.begin(); it != bindings.end(); ++it ) {
+        char *val = config ? g_key_file_get_string ( config, "keybindings", it->second.str, NULL):NULL;
         if(val){
-            parse_config_keybinding(&(bindings[k]), val, modifiers);
+            parse_config_keybinding(&it->second, val, modifiers);
             g_free(val);
         }
         else{
-            parse_config_keybinding(&(bindings[k]), bindings[k].str_key, modifiers);
+            parse_config_keybinding(&(it->second), it->second.str_key, modifiers);
         }
     }
 }
