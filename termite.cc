@@ -868,9 +868,8 @@ gboolean window_state_cb(GtkWindow *, GdkEventWindowState *event, keybind_info *
 gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, keybind_info *info) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
 
-    //for ( guint i = 0; i < num_bindings; i++) {
-    for ( auto it = bindings.begin(); it != bindings.end(); ++it ) {
-        if( (it->second.mode&info->select.mode) != 0 ){
+    for (auto it = bindings.begin(); it != bindings.end(); ++it) {
+        if ((it->second.mode&info->select.mode) != 0) {
             for ( auto &binding : it->second.keys ) {
                 guint mod = std::get<0>(binding);
                 guint key = std::get<1>(binding);
@@ -1405,17 +1404,17 @@ static void parse_config_keybinding ( keybinding_key *bind, const char *value, g
     guint kmod, kkey;
     // Clear existing.
     bind->keys.clear();
-    if(value) {
+    if (value) {
         gchar **str_bindings = g_strsplit(value, ",", -1);
-        for( guint i =0; str_bindings != nullptr &&  str_bindings[i] != nullptr; i++)
+        for (guint i =0; str_bindings != nullptr &&  str_bindings[i] != nullptr; i++)
         {
             gtk_accelerator_parse(str_bindings[i], &kkey,  (GdkModifierType *)&kmod);
-            if((kmod&GDK_SHIFT_MASK) == GDK_SHIFT_MASK){
+            if ((kmod&GDK_SHIFT_MASK) == GDK_SHIFT_MASK) {
                 kkey = gdk_keyval_to_upper(kkey);
             }
-            if ( !(kmod == 0 && kkey == 0) ){
+            if (!(kmod == 0 && kkey == 0)) {
                 bind->keys.push_back(std::make_tuple(kmod&modifiers, kkey));
-            }else {
+            } else {
                 fprintf(stderr, "Failed to understand: %s\n", str_bindings[i]);
             }
         }
@@ -1428,11 +1427,11 @@ static void load_keybindings ( GKeyFile *config )
     // TODO: Can we not loop over all entries. It's a hash map loop over config..
     for ( auto it = bindings.begin(); it != bindings.end(); ++it ) {
         char *val = config ? g_key_file_get_string ( config, "keybindings", it->second.str, NULL):NULL;
-        if(val){
+        if (val) {
             parse_config_keybinding(&it->second, val, modifiers);
             g_free(val);
         }
-        else{
+        else {
             parse_config_keybinding(&(it->second), it->second.str_key, modifiers);
         }
     }
